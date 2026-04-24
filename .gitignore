@@ -1,0 +1,41 @@
+.DS_Store
+Thumbs.db
+
+# IDEs and local editor state
+.idea/
+.vscode/
+*.iml
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build and packaging artifacts
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Tool caches
+.uv-cache/
+
+# Project-local tool state
+.jbeval/
