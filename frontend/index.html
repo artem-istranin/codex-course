@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wheel Winner</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="wheel-panel" aria-labelledby="app-title">
+        <div class="wheel-stage">
+          <canvas id="wheel" width="680" height="680" aria-label="Participant wheel"></canvas>
+          <div class="pointer" aria-hidden="true"></div>
+        </div>
+        <div class="result" id="result" aria-live="polite">Add names and spin the wheel.</div>
+      </section>
+
+      <section class="controls-panel" aria-labelledby="app-title">
+        <div class="heading">
+          <p class="eyebrow">Randomizer</p>
+          <h1 id="app-title">Wheel Winner</h1>
+        </div>
+
+        <label for="participants">Participants</label>
+        <textarea id="participants" spellcheck="false">Alice
+Bob
+Clara
+Dmitri
+Elena
+Fatima</textarea>
+
+        <div class="actions">
+          <button id="spin" type="button">Spin</button>
+          <button id="sample" class="secondary" type="button">Sample</button>
+        </div>
+
+        <p class="error" id="error" role="alert"></p>
+      </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

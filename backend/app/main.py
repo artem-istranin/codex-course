@@ -1,10 +1,21 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.randomizer import pick_winner_index
 from app.schemas import PickWinnerRequest, PickWinnerResponse
 
 
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+
 app = FastAPI(title="Wheel Winner API")
+
+
+@app.get("/", include_in_schema=False)
+def frontend() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 @app.post("/api/pick-winner", response_model=PickWinnerResponse)
@@ -25,3 +36,6 @@ def pick_winner(payload: PickWinnerRequest) -> PickWinnerResponse:
         winner_index=winner_index,
         participants=cleaned_participants,
     )
+
+
+app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")

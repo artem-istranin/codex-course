@@ -1,16 +1,25 @@
-# Wheel Winner
+# Randomizer Wheel
 
-FastAPI backend for selecting a random winner from a submitted participant list.
+One-page wheel UI with a FastAPI backend for selecting a random winner from a submitted participant list.
 
 ## Project Structure
 
 ```text
-wheel-winner/
+randomizer-wheel/
 ├── backend/
 │   ├── app/
+│   │   ├── main.py
+│   │   ├── schemas.py
+│   │   └── randomizer.py
 │   ├── tests/
+│   │   ├── test_api.py
+│   │   └── test_randomizer.py
 │   ├── pyproject.toml
 │   └── uv.lock
+├── frontend/
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
 ├── README.md
 └── .gitignore
 ```
@@ -27,14 +36,15 @@ cd backend
 UV_CACHE_DIR=.uv-cache uv sync --dev
 ```
 
-## Run The API
+## Run The Application
 
 ```bash
 cd backend
 UV_CACHE_DIR=.uv-cache uv run uvicorn app.main:app --reload
 ```
 
-The API is served at `http://127.0.0.1:8000`.
+Open the frontend at `http://127.0.0.1:8000/`.
+The API is served under `http://127.0.0.1:8000/api`.
 
 ## Endpoint
 
