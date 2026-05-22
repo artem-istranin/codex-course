@@ -9,7 +9,9 @@ def pick_winner_index(
     randomizer: Random | SystemRandom | None = None,
 ) -> int:
     if not participants:
-        raise ValueError("participants must contain at least one item")
+        raise ValueError(
+            "participants must contain at least one item"
+        )
 
     rng = randomizer or _randomizer
     return rng.randrange(len(participants))
