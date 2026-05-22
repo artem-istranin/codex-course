@@ -10,28 +10,6 @@ This repository contains a small FastAPI application with a static frontend.
 - `frontend/`: static files for frontend.
 - `README.md`: setup and usage instructions for users.
 
-## Build, Test, and Development Commands
-
-Run backend commands from `backend/`.
-
-```bash
-UV_CACHE_DIR=.uv-cache uv sync --dev
-```
-
-Installs runtime and development dependencies from `pyproject.toml` and `uv.lock`.
-
-```bash
-UV_CACHE_DIR=.uv-cache uv run uvicorn app.main:app --reload
-```
-
-Starts the local app with reload enabled. Open `http://127.0.0.1:8000/`; API routes are under `/api`.
-
-```bash
-UV_CACHE_DIR=.uv-cache uv run pytest
-```
-
-Runs the full backend test suite.
-
 ## Coding Style & Naming Conventions
 
 Use Python 3.13+ and keep backend code typed where practical. Follow the existing style: 4-space indentation, snake_case functions and variables, PascalCase classes, and focused modules with business logic separated from route handlers. Test doubles should be simple local classes, as in `StubRandomizer`.
