@@ -10,6 +10,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "diff-cover>=9.7.2",
     "httpx>=0.28.1",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",

@@ -5,6 +5,11 @@ on:
     branches: ["main"]
   pull_request:
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   backend-tests:
     name: Backend tests
@@ -17,6 +22,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -32,4 +39,133 @@ jobs:
         run: uv sync --locked --dev
 
       - name: Run tests with branch coverage
-        run: uv run pytest
+        run: uv run pytest --cov-report=xml:coverage.xml
+
+      - name: Read branch coverage
+        id: coverage
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse("coverage.xml").getroot()
+          branch_coverage = float(root.attrib["branch-rate"]) * 100
+          percentage = f"{branch_coverage:.2f}"
+
+          if branch_coverage >= 95:
+              color = "brightgreen"
+          elif branch_coverage >= 85:
+              color = "yellow"
+          else:
+              color = "red"
+
+          print(f"percentage={percentage}")
+          print(f"badge_url=https://img.shields.io/badge/branch%20coverage-{percentage}%25-{color}")
+          PY
+
+      - name: Generate PR coverage report
+        if: github.event_name == 'pull_request'
+        run: >
+          uv run diff-cover coverage.xml
+          --compare-branch=origin/${{ github.base_ref }}
+          --format json:pr-coverage.json
+
+      - name: Read PR coverage
+        if: github.event_name == 'pull_request'
+        id: pr_coverage
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+
+          with open("pr-coverage.json", encoding="utf-8") as report_file:
+              report = json.load(report_file)
+
+          pr_coverage = float(report["total_percent_covered"])
+          percentage = f"{pr_coverage:.2f}"
+          coverable_lines = int(report["total_num_lines"])
+          changed_lines = int(report["num_changed_lines"])
+
+          if pr_coverage >= 95:
+              color = "brightgreen"
+          elif pr_coverage >= 85:
+              color = "yellow"
+          else:
+              color = "red"
+
+          print(f"percentage={percentage}")
+          print(f"coverable_lines={coverable_lines}")
+          print(f"changed_lines={changed_lines}")
+          print(f"badge_url=https://img.shields.io/badge/PR%20coverage-{percentage}%25-{color}")
+          PY
+
+      - name: Publish branch coverage summary
+        run: |
+          {
+            echo "## Branch coverage"
+            echo ""
+            echo "![Branch coverage](${{ steps.coverage.outputs.badge_url }})"
+            echo ""
+            echo "Branch coverage: ${{ steps.coverage.outputs.percentage }}%"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish PR coverage summary
+        if: github.event_name == 'pull_request'
+        run: |
+          {
+            echo ""
+            echo "## PR coverage"
+            echo ""
+            echo "![PR coverage](${{ steps.pr_coverage.outputs.badge_url }})"
+            echo ""
+            echo "PR coverage: ${{ steps.pr_coverage.outputs.percentage }}%"
+            echo "Coverable changed lines: ${{ steps.pr_coverage.outputs.coverable_lines }}"
+            echo "Changed lines: ${{ steps.pr_coverage.outputs.changed_lines }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment coverage on PR
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- branch-coverage-report -->';
+            const body = `${marker}
+            ## Coverage
+
+            ![Branch coverage](${{ steps.coverage.outputs.badge_url }})
+            ![PR coverage](${{ steps.pr_coverage.outputs.badge_url }})
+
+            Branch coverage: **${{ steps.coverage.outputs.percentage }}%**
+
+            PR coverage: **${{ steps.pr_coverage.outputs.percentage }}%**
+
+            Coverable changed lines: ${{ steps.pr_coverage.outputs.coverable_lines }}
+            Changed lines: ${{ steps.pr_coverage.outputs.changed_lines }}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+            });
+            const existing = comments.find(
+              (comment) =>
+                comment.user.type === 'Bot' && comment.body.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }

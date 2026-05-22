@@ -18,6 +18,9 @@ __pycache__/
 .hypothesis/
 .coverage
 .coverage.*
+coverage.xml
+pr-coverage.json
+pr-coverage.md
 htmlcov/
 
 # Virtual environments
