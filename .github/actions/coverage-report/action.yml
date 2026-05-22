@@ -1,0 +1,40 @@
+name: Coverage report
+description: Report overall branch coverage and pull request diff coverage.
+
+inputs:
+  coverage-xml:
+    description: Path to coverage.py XML output.
+    required: true
+  source-prefix:
+    description: Repository path prefix for covered sources.
+    required: false
+    default: ""
+  base-sha:
+    description: Base commit SHA for pull request diff coverage.
+    required: false
+    default: ""
+  github-token:
+    description: GitHub token used to update pull request comments.
+    required: false
+    default: ""
+
+outputs:
+  coverage:
+    description: Overall branch coverage percentage.
+    value: ${{ steps.report.outputs.coverage }}
+  pr-coverage:
+    description: Pull request diff coverage percentage.
+    value: ${{ steps.report.outputs['pr-coverage'] }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build coverage report
+      id: report
+      shell: bash
+      env:
+        COVERAGE_XML: ${{ inputs.coverage-xml }}
+        SOURCE_PREFIX: ${{ inputs.source-prefix }}
+        BASE_SHA: ${{ inputs.base-sha }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: python "$GITHUB_ACTION_PATH/report_coverage.py"
