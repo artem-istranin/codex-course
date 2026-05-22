@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: read
 
 jobs:
   test:
@@ -40,3 +42,9 @@ jobs:
 
       - name: Run tests with branch coverage
         run: uv run --frozen pytest
+
+      - name: Report coverage
+        uses: ./.github/actions/coverage-report
+        with:
+          coverage-file: backend/coverage.xml
+          source-prefix: backend/app

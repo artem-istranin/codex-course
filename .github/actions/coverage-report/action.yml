@@ -1,0 +1,21 @@
+name: Coverage report
+description: Report overall and pull request coverage from coverage.py XML.
+
+inputs:
+  coverage-file:
+    description: Path to the coverage XML report.
+    required: true
+  source-prefix:
+    description: Repository-relative source directory for diff coverage.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Report coverage
+      shell: bash
+      env:
+        COVERAGE_FILE: ${{ inputs.coverage-file }}
+        SOURCE_PREFIX: ${{ inputs.source-prefix }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: python "$GITHUB_ACTION_PATH/report_coverage.py"
