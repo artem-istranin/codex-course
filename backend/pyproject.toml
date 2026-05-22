@@ -12,6 +12,7 @@ dependencies = [
 dev = [
     "httpx>=0.28.1",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
 ]
 
 [build-system]
@@ -22,4 +23,18 @@ build-backend = "setuptools.build_meta"
 packages = ["app"]
 
 [tool.pytest.ini_options]
+addopts = [
+    "--cov=app",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true

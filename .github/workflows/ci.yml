@@ -34,5 +34,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --dev
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with branch coverage
+        run: uv run pytest --cov-report=markdown-append:${GITHUB_STEP_SUMMARY}
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
