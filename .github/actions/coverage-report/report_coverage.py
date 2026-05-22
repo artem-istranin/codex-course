@@ -33,7 +33,12 @@ def main() -> int:
     write_summary(body)
 
     if pr_number:
-        upsert_pr_comment(int(pr_number), f"{COMMENT_MARKER}\n{body}")
+        try:
+            upsert_pr_comment(int(pr_number), f"{COMMENT_MARKER}\n{body}")
+        except urllib.error.HTTPError as error:
+            if error.code != 403:
+                raise
+            print("Skipping PR comment because the workflow token cannot write comments.", file=sys.stderr)
 
     return 0
 
