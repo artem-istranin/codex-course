@@ -1,0 +1,90 @@
+name: Coverage report
+description: Write coverage badges to the job summary and PR comments.
+
+inputs:
+  coverage-file:
+    description: Path to the coverage.py XML report.
+    required: true
+  source-prefix:
+    description: Repository-relative path that coverage XML filenames are rooted under.
+    required: true
+  base-sha:
+    description: Pull request base SHA for diff coverage.
+    required: false
+    default: ""
+  head-sha:
+    description: Pull request head SHA for diff coverage.
+    required: false
+    default: ""
+  pr-number:
+    description: Pull request number to comment on.
+    required: false
+    default: ""
+  github-token:
+    description: Token used to create or update the pull request comment.
+    required: true
+
+outputs:
+  coverage:
+    description: Overall branch coverage percentage.
+    value: ${{ steps.report.outputs.coverage }}
+  pr-coverage:
+    description: Pull request diff coverage percentage.
+    value: ${{ steps.report.outputs.pr-coverage }}
+  markdown:
+    description: Badge-only Markdown report.
+    value: ${{ steps.report.outputs.markdown }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build coverage badges
+      id: report
+      shell: bash
+      run: >-
+        python "$GITHUB_ACTION_PATH/coverage_report.py"
+        --coverage-file "${{ inputs.coverage-file }}"
+        --source-prefix "${{ inputs.source-prefix }}"
+        --base-sha "${{ inputs.base-sha }}"
+        --head-sha "${{ inputs.head-sha }}"
+
+    - name: Create or update PR comment
+      if: ${{ inputs.pr-number != '' }}
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const body = `${{ steps.report.outputs.markdown }}`;
+          const issue_number = Number("${{ inputs.pr-number }}");
+          const { owner, repo } = context.repo;
+
+          try {
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 },
+            );
+
+            const existing = comments.find((comment) => (
+              comment.user?.type === "Bot"
+              && comment.body.includes("img.shields.io/badge/Coverage-")
+              && comment.body.includes("img.shields.io/badge/PR%20coverage-")
+            ));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+          } catch (error) {
+            core.warning(`Unable to publish coverage comment: ${error.message}`);
+          }
