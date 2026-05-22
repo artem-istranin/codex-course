@@ -24,4 +24,4 @@ packages = ["app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=app --cov-branch --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=90"
+addopts = "--cov=app --cov-branch --cov-report=term-missing --cov-fail-under=90"
