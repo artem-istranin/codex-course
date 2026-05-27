@@ -13,6 +13,11 @@ FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 app = FastAPI(title="Wheel Winner API")
 
 
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @app.get("/", include_in_schema=False)
 def frontend() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
