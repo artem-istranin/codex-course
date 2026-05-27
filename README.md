@@ -20,6 +20,9 @@ randomizer-wheel/
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
+├── Dockerfile
+├── .dockerignore
+├── justfile
 ├── README.md
 └── .gitignore
 ```
@@ -28,6 +31,11 @@ randomizer-wheel/
 
 - Python 3.13+
 - `uv`
+
+For container workflows:
+
+- Docker
+- `just`
 
 ## Backend Setup
 
@@ -46,7 +54,50 @@ UV_CACHE_DIR=.uv-cache uv run uvicorn app.main:app --reload
 Open the frontend at `http://127.0.0.1:8000/`.
 The API is served under `http://127.0.0.1:8000/api`.
 
-## Endpoint
+## Docker
+
+Build the image from the repository root:
+
+```bash
+just build
+```
+
+Run the container on local port `8080`:
+
+```bash
+just run
+```
+
+Inspect the image metadata:
+
+```bash
+just inspect
+```
+
+Smoke-test the running container:
+
+```bash
+just smoke
+```
+
+Override defaults when needed:
+
+```bash
+just port=9090 run
+just port=9090 smoke
+```
+
+## Endpoints
+
+### `GET /health`
+
+Example response:
+
+```json
+{
+  "status": "ok"
+}
+```
 
 ### `POST /api/pick-winner`
 

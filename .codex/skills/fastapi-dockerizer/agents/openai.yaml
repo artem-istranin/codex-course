@@ -1,0 +1,4 @@
+interface:
+  display_name: "FastAPI Dockerizer"
+  short_description: "Dockerize FastAPI apps with uv"
+  default_prompt: "Use $fastapi-dockerizer to containerize this FastAPI app and add local Docker commands."
