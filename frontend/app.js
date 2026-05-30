@@ -6,6 +6,14 @@ const spinButton = document.querySelector("#spin");
 const sampleButton = document.querySelector("#sample");
 const resultEl = document.querySelector("#result");
 const errorEl = document.querySelector("#error");
+const wheelStage = document.querySelector(".wheel-stage");
+const celebrationLayer = document.querySelector("#celebration-layer");
+const winnerOverlay = document.querySelector("#winner-overlay");
+const winnerOverlayName = document.querySelector("#winner-overlay-name");
+const closeCelebrationButton = document.querySelector("#close-celebration");
+const winnerList = document.querySelector("#winner-list");
+const winnerHistoryEmpty = document.querySelector("#winner-history-empty");
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const colors = [
   "#e33d3d",
@@ -20,6 +28,7 @@ const colors = [
 
 let rotation = 0;
 let participants = parseParticipants();
+let winners = [];
 let isSpinning = false;
 
 function parseParticipants() {
@@ -36,6 +45,81 @@ function setError(message) {
 function setResult(message, hasWinner = false) {
   resultEl.textContent = message;
   resultEl.classList.toggle("has-winner", hasWinner);
+}
+
+function clearCelebration() {
+  celebrationLayer.replaceChildren();
+  winnerOverlay.hidden = true;
+  resultEl.classList.remove("winner-reveal");
+}
+
+function dismissCelebration() {
+  clearCelebration();
+  spinButton.focus();
+}
+
+function celebrateWinner(winner) {
+  clearCelebration();
+  winnerOverlayName.textContent = winner;
+  winnerOverlay.hidden = false;
+  resultEl.classList.add("winner-reveal");
+
+  if (prefersReducedMotion.matches) {
+    closeCelebrationButton.focus();
+    return;
+  }
+
+  const confetti = Array.from({ length: 90 }, (_, index) => {
+    const piece = document.createElement("i");
+    const angle = (index / 90) * TAU + Math.random() * 0.35;
+    const distance = 36 + Math.random() * 48;
+
+    piece.className = "confetti";
+    piece.style.setProperty("--confetti-color", colors[index % colors.length]);
+    piece.style.setProperty("--confetti-x", `${50 + Math.cos(angle) * distance}vw`);
+    piece.style.setProperty("--confetti-y", `${42 + Math.sin(angle) * distance}vh`);
+    piece.style.setProperty("--confetti-rotation", `${360 + Math.random() * 900}deg`);
+    piece.style.setProperty("--confetti-delay", `${Math.random() * 180}ms`);
+    piece.style.setProperty("--confetti-duration", `${1150 + Math.random() * 900}ms`);
+    return piece;
+  });
+
+  celebrationLayer.replaceChildren(...confetti);
+  closeCelebrationButton.focus();
+}
+
+function renderWinners() {
+  winnerList.replaceChildren(
+    ...winners.map((winner) => {
+      const item = document.createElement("li");
+      item.textContent = winner;
+      return item;
+    }),
+  );
+  winnerHistoryEmpty.hidden = winners.length > 0;
+}
+
+function resetWinners() {
+  winners = [];
+  renderWinners();
+}
+
+function syncParticipants(names) {
+  participants = names;
+  participantsInput.value = names.join("\n");
+  drawWheel(names);
+}
+
+function updateSpinAvailability() {
+  spinButton.disabled = isSpinning || participants.length < 2;
+}
+
+function readyMessage() {
+  if (!participants.length) {
+    return "Add names and spin the wheel.";
+  }
+
+  return participants.length === 1 ? "Add at least one more participant." : "Ready to spin.";
 }
 
 function normalizeAngle(angle) {
@@ -140,10 +224,24 @@ function animateToWinner(winnerIndex, names, winner) {
 
     rotation = target;
     drawWheel(names);
+    wheelStage.classList.remove("is-spinning");
+    winners.push(winner);
+    const remainingParticipants = names.filter((_, index) => index !== winnerIndex);
+
+    if (remainingParticipants.length === 1) {
+      winners.push(remainingParticipants[0]);
+      syncParticipants([]);
+      setResult(`Complete. Final winner: ${remainingParticipants[0]}`, true);
+    } else {
+      syncParticipants(remainingParticipants);
+      setResult(`Winner: ${winner}`, true);
+    }
+
+    renderWinners();
+    celebrateWinner(winner);
     isSpinning = false;
-    spinButton.disabled = false;
     sampleButton.disabled = false;
-    setResult(`Winner: ${winner}`, true);
+    updateSpinAvailability();
   }
 
   requestAnimationFrame(frame);
@@ -157,16 +255,19 @@ async function spin() {
   const names = parseParticipants();
   participants = names;
   drawWheel(names);
+  clearCelebration();
   setError("");
   setResult("Spinning...");
 
-  if (!names.length) {
+  if (names.length < 2) {
     setResult("Add names and spin the wheel.");
-    setError("Enter at least one participant.");
+    setError("Enter at least two participants.");
+    updateSpinAvailability();
     return;
   }
 
   isSpinning = true;
+  wheelStage.classList.add("is-spinning");
   spinButton.disabled = true;
   sampleButton.disabled = true;
 
@@ -184,13 +285,12 @@ async function spin() {
     }
 
     const payload = await response.json();
-    participants = payload.participants;
-    participantsInput.value = payload.participants.join("\n");
     animateToWinner(payload.winner_index, payload.participants, payload.winner);
   } catch (error) {
     isSpinning = false;
-    spinButton.disabled = false;
+    wheelStage.classList.remove("is-spinning");
     sampleButton.disabled = false;
+    updateSpinAvailability();
     setResult("Add names and spin the wheel.");
     setError(error.message || "Something went wrong. Try again.");
   }
@@ -202,12 +302,22 @@ participantsInput.addEventListener("input", () => {
   }
 
   participants = parseParticipants();
+  clearCelebration();
+  resetWinners();
   setError("");
-  setResult(participants.length ? "Ready to spin." : "Add names and spin the wheel.");
+  setResult(readyMessage());
   drawWheel(participants);
+  updateSpinAvailability();
 });
 
 spinButton.addEventListener("click", spin);
+closeCelebrationButton.addEventListener("click", dismissCelebration);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !winnerOverlay.hidden) {
+    dismissCelebration();
+  }
+});
 
 sampleButton.addEventListener("click", () => {
   if (isSpinning) {
@@ -216,9 +326,14 @@ sampleButton.addEventListener("click", () => {
 
   participantsInput.value = ["Alice", "Bob", "Clara", "Dmitri", "Elena", "Fatima"].join("\n");
   participants = parseParticipants();
+  clearCelebration();
+  resetWinners();
   setError("");
   setResult("Ready to spin.");
   drawWheel(participants);
+  updateSpinAvailability();
 });
 
 drawWheel(participants);
+renderWinners();
+updateSpinAvailability();
