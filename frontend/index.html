@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+    <div class="celebration-layer" id="celebration-layer" aria-hidden="true"></div>
+    <section class="winner-overlay" id="winner-overlay" role="dialog" aria-modal="true" aria-labelledby="winner-overlay-title" hidden>
+      <div class="winner-overlay-card">
+        <p class="winner-overlay-eyebrow">We have a winner</p>
+        <h2 id="winner-overlay-title">Congratulations!</h2>
+        <p class="winner-overlay-name" id="winner-overlay-name"></p>
+        <button id="close-celebration" type="button">Continue</button>
+      </div>
+    </section>
+
     <main class="app-shell">
       <section class="wheel-panel" aria-labelledby="app-title">
         <div class="wheel-stage">
@@ -36,6 +46,12 @@ Fatima</textarea>
         </div>
 
         <p class="error" id="error" role="alert"></p>
+
+        <section class="winner-history" aria-labelledby="winner-history-title">
+          <h2 id="winner-history-title">Winner order</h2>
+          <p class="winner-history-empty" id="winner-history-empty">Spin the wheel to start the list.</p>
+          <ol class="winner-list" id="winner-list"></ol>
+        </section>
       </section>
     </main>
 

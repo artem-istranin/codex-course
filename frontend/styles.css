@@ -25,6 +25,74 @@ body {
     var(--bg);
 }
 
+.celebration-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  width: 11px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--confetti-color);
+  opacity: 0;
+  animation: confetti-burst var(--confetti-duration) cubic-bezier(0.14, 0.72, 0.28, 1) var(--confetti-delay) infinite;
+}
+
+.winner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.34);
+}
+
+.winner-overlay[hidden] {
+  display: none;
+}
+
+.winner-overlay-card {
+  width: min(100%, 470px);
+  padding: clamp(28px, 6vw, 48px);
+  border: 2px solid #f0c15a;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 80px rgba(23, 32, 51, 0.34);
+  text-align: center;
+  animation: overlay-reveal 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.winner-overlay-eyebrow {
+  margin: 0 0 8px;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.winner-overlay-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+}
+
+.winner-overlay-name {
+  margin: 16px 0 26px;
+  color: var(--primary-dark);
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  font-weight: 900;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 390px;
@@ -81,6 +149,10 @@ canvas {
   z-index: 2;
 }
 
+.wheel-stage.is-spinning .pointer {
+  animation: pointer-pulse 520ms ease-in-out infinite alternate;
+}
+
 .result {
   min-height: 40px;
   width: min(100%, 560px);
@@ -98,6 +170,10 @@ canvas {
   color: var(--text);
   background: #fff4d8;
   border-color: #f0c15a;
+}
+
+.result.winner-reveal {
+  animation: winner-reveal 720ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .controls-panel {
@@ -194,6 +270,102 @@ button.secondary:hover:not(:disabled) {
   color: var(--primary-dark);
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+.winner-history {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.winner-history h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.winner-history-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.winner-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 30px;
+}
+
+.winner-list li {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.winner-list li::marker {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+@keyframes confetti-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+
+  72% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--confetti-x) - 50vw), calc(var(--confetti-y) - 44vh)) scale(1) rotate(var(--confetti-rotation));
+  }
+}
+
+@keyframes pointer-pulse {
+  to {
+    transform: translateX(-50%) translateY(5px) scale(1.08);
+    filter: drop-shadow(0 7px 7px rgba(23, 32, 51, 0.3));
+  }
+}
+
+@keyframes winner-reveal {
+  0% {
+    transform: scale(0.92);
+  }
+
+  45% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 8px rgba(240, 193, 90, 0.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes overlay-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.88);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti,
+  .wheel-stage.is-spinning .pointer,
+  .result.winner-reveal,
+  .winner-overlay-card {
+    animation: none;
+  }
 }
 
 @media (max-width: 880px) {
