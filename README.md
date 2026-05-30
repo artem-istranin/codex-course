@@ -1,25 +1,60 @@
 # Randomizer Wheel
 
+![wheel-winner-img1.png](docs/assets/wheel-winner-img1.png)
+![wheel-winner-img2.png](docs/assets/wheel-winner-img2.png)
+
 One-page wheel UI with a FastAPI backend for selecting a random winner from a submitted participant list.
 
 ## Project Structure
 
 ```text
 randomizer-wheel/
+├── .github/
+│   ├── actions/
+│   │   └── coverage-report/
+│   │       ├── action.yml
+│   │       └── report_coverage.py
+│   └── workflows/
+│       ├── ci.yml
+│       └── deployment.yml
 ├── backend/
 │   ├── app/
+│   │   ├── __init__.py
 │   │   ├── main.py
-│   │   ├── schemas.py
-│   │   └── randomizer.py
+│   │   ├── randomizer.py
+│   │   └── schemas.py
 │   ├── tests/
 │   │   ├── test_api.py
 │   │   └── test_randomizer.py
 │   ├── pyproject.toml
 │   └── uv.lock
+├── docs/
+│   ├── deployment-setup.md
+│   └── deployment.md
 ├── frontend/
+│   ├── app.js
 │   ├── index.html
-│   ├── styles.css
-│   └── app.js
+│   └── styles.css
+├── infra/
+│   ├── application/
+│   │   ├── .terraform.lock.hcl
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   ├── variables.tf
+│   │   └── versions.tf
+│   ├── bootstrap/
+│   │   ├── .terraform.lock.hcl
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   ├── terraform.tfvars.example
+│   │   ├── variables.tf
+│   │   └── versions.tf
+│   └── foundation/
+│       ├── .terraform.lock.hcl
+│       ├── main.tf
+│       ├── outputs.tf
+│       ├── variables.tf
+│       └── versions.tf
 ├── Dockerfile
 ├── .dockerignore
 ├── justfile
