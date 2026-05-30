@@ -46,7 +46,7 @@ already taken.
 Run the one-time bootstrap apply:
 
 ```bash
-terraform -chdir=infra/bootstrap init -backend=false
+terraform -chdir=infra/bootstrap init
 terraform -chdir=infra/bootstrap apply
 ```
 
@@ -57,19 +57,9 @@ This creates:
 - The GitHub Actions deployer service account and IAM grants.
 - A repository-restricted GitHub OIDC Workload Identity provider.
 
-Migrate the bootstrap state into the new bucket:
-
-```bash
-TF_STATE_BUCKET="$(terraform -chdir=infra/bootstrap output -raw state_bucket)"
-
-terraform -chdir=infra/bootstrap init \
-  -migrate-state \
-  -backend-config="bucket=$TF_STATE_BUCKET" \
-  -backend-config="prefix=wheel-winner/bootstrap"
-```
-
-Confirm the migration when Terraform prompts. Future bootstrap changes use the
-remote state bucket:
+The bootstrap root intentionally keeps local state because it creates the GCS
+bucket used by the other Terraform roots. Preserve `infra/bootstrap/terraform.tfstate`
+in a secure operator backup. Future bootstrap changes use the same local state:
 
 ```bash
 terraform -chdir=infra/bootstrap apply
@@ -122,7 +112,7 @@ Validate Terraform syntax locally:
 
 ```bash
 terraform fmt -check -recursive infra
-terraform -chdir=infra/bootstrap init -backend=false
+terraform -chdir=infra/bootstrap init
 terraform -chdir=infra/bootstrap validate
 terraform -chdir=infra/foundation init -backend=false
 terraform -chdir=infra/foundation validate

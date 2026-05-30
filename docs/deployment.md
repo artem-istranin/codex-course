@@ -25,13 +25,23 @@ Terraform is split into three roots:
 - `infra/application` reads foundation outputs from remote state and creates the
   public Cloud Run v2 service.
 
+The foundation root is separate because Cloud Run cannot be created until a
+container image exists, while the image cannot be pushed until Artifact
+Registry exists. The deployment workflow applies `infra/foundation`, builds and
+pushes the image, then applies `infra/application` with that image URI. This
+keeps the initial deployment and later updates on the same workflow path without
+special-case bootstrap logic.
+
 The stacks use separate prefixes in the same state bucket:
 
 ```text
-wheel-winner/bootstrap
 wheel-winner/foundation
 wheel-winner/application
 ```
+
+The bootstrap root intentionally keeps local operator state because it creates
+the remote state bucket required by the other roots. Back up that local state
+securely after bootstrap.
 
 After the local bootstrap apply, the GitHub CLI configures the `production`
 environment from Terraform outputs. The `Deployment` workflow is then the main
