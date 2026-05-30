@@ -14,6 +14,9 @@ randomizer-wheel/
 │   │   └── coverage-report/
 │   │       ├── action.yml
 │   │       └── report_coverage.py
+│   ├── codex/
+│   │   └── prompts/
+│   │       └── review.md
 │   └── workflows/
 │       ├── ci.yml
 │       └── deployment.yml
@@ -166,6 +169,12 @@ Notes:
 cd backend
 UV_CACHE_DIR=.uv-cache uv run pytest
 ```
+
+## Codex Pull Request Reviews
+
+The CI workflow runs a Codex review for pull requests and posts the result as a
+PR comment. Add an `OPENAI_API_KEY` Actions secret to the GitHub repository
+before enabling the workflow.
 
 ## Deployment
 
