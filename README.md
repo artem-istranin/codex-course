@@ -131,3 +131,9 @@ Notes:
 cd backend
 UV_CACHE_DIR=.uv-cache uv run pytest
 ```
+
+## Deployment
+
+Production infrastructure is managed with Terraform and deployed to Google
+Cloud Run from GitHub Actions. See [Deployment Architecture](docs/deployment.md)
+and [Deployment Setup](docs/deployment-setup.md).

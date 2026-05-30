@@ -50,3 +50,41 @@ jobs:
           source-prefix: backend
           base-sha: ${{ github.event.pull_request.base.sha || '' }}
           github-token: ${{ github.token }}
+
+  terraform:
+    name: Terraform validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive infra
+
+      - name: Initialize bootstrap configuration
+        working-directory: infra/bootstrap
+        run: terraform init -backend=false -input=false
+
+      - name: Validate bootstrap configuration
+        working-directory: infra/bootstrap
+        run: terraform validate
+
+      - name: Initialize foundation configuration
+        working-directory: infra/foundation
+        run: terraform init -backend=false -input=false
+
+      - name: Validate foundation configuration
+        working-directory: infra/foundation
+        run: terraform validate
+
+      - name: Initialize application configuration
+        working-directory: infra/application
+        run: terraform init -backend=false -input=false
+
+      - name: Validate application configuration
+        working-directory: infra/application
+        run: terraform validate

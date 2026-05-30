@@ -1,0 +1,4 @@
+project_id        = "your-project-id"
+region            = "europe-west1"
+github_owner      = "your-github-owner"
+github_repository = "wheel-winner"
