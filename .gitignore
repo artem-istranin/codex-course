@@ -38,5 +38,17 @@ pip-wheel-metadata/
 # Tool caches
 .uv-cache/
 
+# Terraform local state and caches
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
 # Project-local tool state
 .jbeval/
