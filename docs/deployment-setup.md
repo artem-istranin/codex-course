@@ -142,6 +142,9 @@ The expected response is:
 
 - If bootstrap cannot enable APIs, verify that the Service Usage API is enabled
   and that your Google Cloud identity can manage project services.
+- If deployment reports that Cloud Resource Manager API is disabled, update the
+  repository, run `terraform -chdir=infra/bootstrap apply`, wait briefly for API
+  activation to propagate, and retry the `Deployment` workflow.
 - If Terraform cannot access state, verify the bucket name and the deployer
   service account bucket IAM binding.
 - If OIDC authentication fails, verify `github_owner`, `github_repository`, and
