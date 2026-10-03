@@ -1,6 +1,5 @@
 # Randomizer Wheel
 
-![wheel-winner-img1.png](docs/assets/wheel-winner-img1.png)
 ![wheel-winner-img2.png](docs/assets/wheel-winner-img2.png)
 
 One-page wheel UI with a FastAPI backend for selecting a random winner from a submitted participant list.
