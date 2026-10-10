@@ -1,0 +1,103 @@
+name: AI Review
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      final_message: ${{ steps.run_codex.outputs.final-message }}
+
+    steps:
+      - name: Check out pull request merge commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      # Read these files from the base commit, never from the PR worktree.
+      - name: Prepare trusted Codex configuration
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          config_path=.github/codex/review-config.toml
+          prompt_path=.github/codex/prompts/review.md
+
+          install -d -m 700 "$CODEX_HOME"
+          git show "$PR_BASE_SHA:$config_path" > "$CODEX_HOME/config.toml"
+          git show "$PR_BASE_SHA:$prompt_path" > "$CODEX_HOME/review.md"
+          # Keep PR-controlled project configuration disabled.
+          printf '\n[projects."%s"]\ntrust_level = "untrusted"\n' \
+            "$GITHUB_WORKSPACE" >> "$CODEX_HOME/config.toml"
+          chmod 600 "$CODEX_HOME/config.toml" "$CODEX_HOME/review.md"
+
+      - name: Verify PR head
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # A newer push can replace the merge ref before checkout finishes.
+          test "$(git rev-parse HEAD^2)" = "$PR_HEAD_SHA"
+
+      - name: Review pull request with Codex
+        id: run_codex
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        with:
+          codex-home: ${{ runner.temp }}/codex-home
+          codex-version: 0.144.5
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: ${{ runner.temp }}/codex-home/review.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          codex-args: '["--ephemeral", "--strict-config"]'
+
+  post_feedback:
+    needs: review
+    if: needs.review.outputs.final_message != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      # No checkout or model execution in the job with write permission.
+      - name: Post Codex feedback for the reviewed head
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        env:
+          CODEX_FINAL_MESSAGE: ${{ needs.review.outputs.final_message }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            if (pr.state !== 'open' || pr.head.sha !== process.env.PR_HEAD_SHA) {
+              core.notice('Skipping feedback because the PR closed or its head changed.');
+              return;
+            }
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr.number,
+              body: process.env.CODEX_FINAL_MESSAGE,
+            });

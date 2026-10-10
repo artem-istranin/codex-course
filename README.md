@@ -14,9 +14,13 @@ randomizer-wheel/
 │   │       ├── action.yml
 │   │       └── report_coverage.py
 │   ├── codex/
-│   │   └── prompts/
-│   │       └── review.md
+│   │   ├── review-config.toml
+│   │   ├── prompts/
+│   │   │   └── review.md
+│   │   └── tests/
+│   │       └── review.test.mjs
 │   └── workflows/
+│       ├── ai-review.yml
 │       ├── ci.yml
 │       └── deployment.yml
 ├── backend/
@@ -31,6 +35,7 @@ randomizer-wheel/
 │   ├── pyproject.toml
 │   └── uv.lock
 ├── docs/
+│   ├── ai-review.md
 │   ├── deployment-setup.md
 │   └── deployment.md
 ├── frontend/
@@ -171,9 +176,15 @@ UV_CACHE_DIR=.uv-cache uv run pytest
 
 ## Codex Pull Request Reviews
 
-The CI workflow runs a Codex review for pull requests and posts the result as a
-PR comment. Add an `OPENAI_API_KEY` Actions secret to the GitHub repository
-before enabling the workflow.
+The independent [AI Review workflow](.github/workflows/ai-review.yml) reviews
+same-repository pull requests to `main` when opened, updated, or reopened.
+Codex returns findings using the review prompt, and a separate job posts the
+result as a PR comment. Fork PRs are skipped. Tests, coverage,
+and Terraform validation remain in `CI`.
+
+Follow the [AI review setup guide](docs/ai-review.md) to configure
+the `OPENAI_API_KEY` repository secret. No additional MCP services or keys are
+needed for automated reviews.
 
 ## Deployment
 
