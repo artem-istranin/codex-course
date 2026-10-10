@@ -179,12 +179,12 @@ UV_CACHE_DIR=.uv-cache uv run pytest
 The independent [AI Review workflow](.github/workflows/ai-review.yml) reviews
 same-repository pull requests to `main` when opened, updated, or reopened.
 Codex returns findings using the review prompt, and a separate job posts the
-result as a PR comment. Fork and Dependabot PRs are skipped. Tests, coverage,
+result as a PR comment. Fork PRs are skipped. Tests, coverage,
 and Terraform validation remain in `CI`.
 
 Follow the [AI review setup guide](docs/ai-review.md) to configure
-`OPENAI_API_KEY` and `CONTEXT7_API_KEY`. The guide explains the trusted
-configuration, sandbox, and review limitations.
+the `OPENAI_API_KEY` repository secret. No additional MCP services or keys are
+needed for automated reviews.
 
 ## Deployment
 
