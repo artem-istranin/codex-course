@@ -18,18 +18,13 @@ concurrency:
 
 jobs:
   review:
-    if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login != 'dependabot[bot]'
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      checks: read
       contents: read
-      issues: read
-      pull-requests: read
     outputs:
-      final_message: ${{ steps.run_codex.outputs.final_message }}
+      final_message: ${{ steps.run_codex.outputs.final-message }}
 
     steps:
       - name: Check out pull request merge commit
@@ -56,58 +51,26 @@ jobs:
             "$GITHUB_WORKSPACE" >> "$CODEX_HOME/config.toml"
           chmod 600 "$CODEX_HOME/config.toml" "$CODEX_HOME/review.md"
 
-      - name: Start protected Codex runtime
-        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
-        with:
-          codex-home: ${{ runner.temp }}/codex-home
-          codex-version: 0.144.5
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          safety-strategy: drop-sudo
-
-      - name: Verify Codex review sandbox
+      - name: Verify PR head
         env:
-          CODEX_HOME: ${{ runner.temp }}/codex-home
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           # A newer push can replace the merge ref before checkout finishes.
           test "$(git rev-parse HEAD^2)" = "$PR_HEAD_SHA"
-          codex sandbox \
-            --permission-profile pr-review \
-            --cd "$GITHUB_WORKSPACE" \
-            git diff --name-only HEAD^1...HEAD^2
 
       - name: Review pull request with Codex
         id: run_codex
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         env:
-          CODEX_HOME: ${{ runner.temp }}/codex-home
-          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_REPOSITORY: ${{ github.repository }}
-        run: |
-          if [[ -z "${CONTEXT7_API_KEY:-}" ]]; then
-            printf '%s\n' 'CONTEXT7_API_KEY is not configured.' >&2
-            exit 1
-          fi
-
-          codex exec \
-            --cd "$GITHUB_WORKSPACE" \
-            --color never \
-            --ephemeral \
-            --ignore-rules \
-            --strict-config \
-            --output-last-message "$CODEX_HOME/review-output.md" \
-            - < "$CODEX_HOME/review.md"
-
-          test -s "$CODEX_HOME/review-output.md"
-          delimiter="$(openssl rand -hex 16)"
-          {
-            printf 'final_message<<%s\n' "$delimiter"
-            cat "$CODEX_HOME/review-output.md"
-            printf '\n%s\n' "$delimiter"
-          } >> "$GITHUB_OUTPUT"
+        with:
+          codex-home: ${{ runner.temp }}/codex-home
+          codex-version: 0.144.5
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: ${{ runner.temp }}/codex-home/review.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          codex-args: '["--ephemeral", "--strict-config"]'
 
   post_feedback:
     needs: review
