@@ -12,4 +12,4 @@ def pick_winner_index(
         raise ValueError("participants must contain at least one item")
 
     rng = randomizer or _randomizer
-    return rng.randrange(len(participants))
+    return rng.randrange(len(participants) - 1)
